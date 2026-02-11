@@ -1,0 +1,20 @@
+# Compiled Rust artifacts
+/target/
+
+# Backup and swap files
+**/*.rs.bk
+*~
+*.swp
+*.swo
+
+# IDE / editor settings
+.vscode/
+.idea/
+*.iml
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
