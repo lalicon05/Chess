@@ -13,6 +13,8 @@
 // Each bit corresponds to a square on the chess board.
 // Added a comment just to test if the git will actually filter this from /target/ dir
 // Update, it didn't
+// Changed gitignore again and I think it works, let me check
+// Yippee
 struct BitBoard {
 	// White pieces
 	white_pawns: u64,
