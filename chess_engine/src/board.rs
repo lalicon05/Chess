@@ -6,8 +6,6 @@
 
 
 // TODO: Implement visualization of the board using html and css (seperate file but will need to be compatible with BitBoard)
-use std::collections::HashMap;
-
 
 #Derive(Debug, Clone, Copy)]
 // BitBoard representation of the chess board.
