@@ -9,6 +9,7 @@
 
 # IDE / editor settings
 .vscode/
+.vs/
 .idea/
 *.iml
 
