@@ -19,3 +19,16 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Built application
+/server
+
+# Temporary files
+/tmp
+/ Cargo.lock
+/ Cargo.toml
+/ .git
+
+# Rust cwd artifacts
+**/*.rsproj
+**/*.rlib
