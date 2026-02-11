@@ -11,6 +11,8 @@
 // BitBoard representation of the chess board.
 // Each piece for each color is represented by a 64-bit unsigned integer
 // Each bit corresponds to a square on the chess board.
+// Added a comment just to test if the git will actually filter this from /target/ dir
+// Update, it didn't
 struct BitBoard {
 	// White pieces
 	white_pawns: u64,
