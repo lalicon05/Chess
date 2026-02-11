@@ -4,6 +4,8 @@
 // Maybe reading through this file when I have gotten further will help someone else
 // who is also learning rust understand how to create chess.
 
+
+// TODO: Implement visualization of the board using html and css (seperate file but will need to be compatible with BitBoard)
 use std::collections::HashMap;
 
 
