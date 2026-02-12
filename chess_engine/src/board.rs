@@ -36,28 +36,28 @@ struct Board {
 	white_can_castle_kingside: bool,
 	white_can_castle_queenside: bool,
 	black_can_castle_kingside: bool,
-	black_can_castle_kingside: bool,
+	black_can_castle_queenside: bool,
+	en_passant_square: Option<u8>, // en-passant target, None if not available
+}
+
+// Bitboard struct to represent the board
+// Each piece type and color will have its own bitboard
+// This allows for efficient move generation and board representation
+pub struct BitBoard {
+	pawns: [u64; 2], // 0 for white, 1 for black
+	knights: [u64; 2],
+	bishops: [u64; 2],
+	rooks: [u64; 2],
+	queens: [u64; 2],
+	kings: [u64; 2],
 }
 
 
-// BitBoard representation of the chess board.
-// Each piece for each color is represented by a 64-bit unsigned integer
-// Each bit corresponds to a square on the chess board.
-#Derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct BitBoard {
-	// White pieces
-	white_pawns: u64,
-	white_knights: u64,
-	white_bishops: u64,
-	white_rooks: u64,
-	white_queens: u64,
-	white_kings: u64,
-
-	// Black pieces
-	black_pawns: u64,
-	black_knights: u64,
-	black_bishops: u64,
-	black_rooks: u64,
-	black_queens: u64,
-	black_kings: u64,
+enum pieces {
+	Pawn,
+	Knight,
+	Bishop,
+	Rook,
+	Queen,
+	King,
 }

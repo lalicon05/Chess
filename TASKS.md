@@ -13,7 +13,7 @@ Use `- [ ]` for todos and change to `- [x]` when done.
 
 Work in `chess_engine/src/board.rs`.
 
-- [ ] Define `Color` type (e.g., white/black)
+- [x] Define `Color` type (e.g., white/black)
 - [ ] Define piece kind type (pawn/knight/bishop/rook/queen/king)
 - [x] Decide if `BitBoard` is your main `Board` or part of it
 - [x] Extend `BitBoard` or create `Board` to include:
@@ -22,7 +22,7 @@ Work in `chess_engine/src/board.rs`.
   - [ ] Halfmove clock (for 50-move rule)
   - [ ] Fullmove number
 - [ ] Fix derive attribute on `BitBoard` (use proper Rust `#[derive(...)]`)
-- [ ] Remove unused imports from `board.rs`
+- [x] Remove unused imports from `board.rs`
 
 ## 2. Starting Position & Printing (Rust)
 
