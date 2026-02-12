@@ -9,12 +9,14 @@
 
 
 // Color handling
+// public enumeration with colors black and white
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Color {
 	White,
 	Black,
 }
 
+// Implementation method to get opposite color
 impl Color {
 	pub fn opposite(&self) -> Color {
 		match self {
@@ -27,6 +29,7 @@ impl Color {
 // Board should include everything needed to initialize the Board
 // Store all pieces in the bitboard struct
 // And save different states like en passant or (the switching castle and king move thing)
+#Derive(Debug, Clone, Copy)]
 struct Board {
 	bitboard: BitBoard,
 	side_to_move: Color,
@@ -36,7 +39,7 @@ struct Board {
 	black_can_castle_kingside: bool,
 }
 
-#Derive(Debug, Clone, Copy)]
+#Derive(Debug, Clone, Copy, PartialEq, Eq)]
 // BitBoard representation of the chess board.
 // Each piece for each color is represented by a 64-bit unsigned integer
 // Each bit corresponds to a square on the chess board.

@@ -16,8 +16,8 @@ Work in `chess_engine/src/board.rs`.
 - [ ] Define `Color` type (e.g., white/black)
 - [ ] Define piece kind type (pawn/knight/bishop/rook/queen/king)
 - [x] Decide if `BitBoard` is your main `Board` or part of it
-- [ ] Extend `BitBoard` or create `Board` to include:
-  - [ ] Castling rights
+- [x] Extend `BitBoard` or create `Board` to include:
+  - [x] Castling rights
   - [ ] En passant square (if any)
   - [ ] Halfmove clock (for 50-move rule)
   - [ ] Fullmove number
