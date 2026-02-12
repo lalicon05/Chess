@@ -38,6 +38,8 @@ struct Board {
 	black_can_castle_kingside: bool,
 	black_can_castle_queenside: bool,
 	en_passant_square: Option<u8>, // en-passant target, None if not available
+	halfmove_clock: u32, // for the fifty move draw rule
+	fullmove_number: u32,
 }
 
 // Bitboard struct to represent the board
