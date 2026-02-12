@@ -39,10 +39,11 @@ struct Board {
 	black_can_castle_kingside: bool,
 }
 
-#Derive(Debug, Clone, Copy, PartialEq, Eq)]
+
 // BitBoard representation of the chess board.
 // Each piece for each color is represented by a 64-bit unsigned integer
 // Each bit corresponds to a square on the chess board.
+#Derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct BitBoard {
 	// White pieces
 	white_pawns: u64,
