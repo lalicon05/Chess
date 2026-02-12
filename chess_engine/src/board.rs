@@ -6,7 +6,7 @@
 
 
 // TODO: Implement visualization of the board using html and css (seperate file but will need to be compatible with BitBoard)
-
+// TODO: Implement move generation and make sure it is efficient
 
 // Color handling
 // public enumeration with colors black and white
