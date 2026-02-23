@@ -10,6 +10,11 @@
 
 // Color handling
 // public enumeration with colors black and white
+pub fn hello_from_board() {
+	println!("hello from board");
+}
+
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Color {
 	White,
@@ -29,7 +34,7 @@ impl Color {
 // Board should include everything needed to initialize the Board
 // Store all pieces in the bitboard struct
 // And save different states like en passant or (the switching castle and king move thing)
-#Derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 struct Board {
 	bitboard: BitBoard,
 	side_to_move: Color,
@@ -45,6 +50,7 @@ struct Board {
 // Bitboard struct to represent the board
 // Each piece type and color will have its own bitboard
 // This allows for efficient move generation and board representation
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BitBoard {
 	pawns: [u64; 2], // 0 for white, 1 for black
 	knights: [u64; 2],
