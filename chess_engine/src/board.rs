@@ -53,8 +53,8 @@ pub struct BitBoard {
 	queens: [u64; 2],
 	kings: [u64; 2],
 }
-
-
+ 
+// enumeration of different pieces
 enum pieces {
 	Pawn,
 	Knight,
