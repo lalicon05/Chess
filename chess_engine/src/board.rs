@@ -14,7 +14,7 @@ pub fn hello_from_board() {
 	println!("hello from board");
 }
 
-
+// Enumerator for the colors
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Color {
 	White,
@@ -70,12 +70,14 @@ pub enum PieceKind {
 	King,
 }
 
+// Struct to organize pieces
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Piece {
 	pub color: Color,
 	pub kind: PieceKind,
 }
 
+// Implementation of the piece type
 impl Piece {
 	pub fn fen_char(&self) -> char {
 		let c = match self.kind {
@@ -93,6 +95,7 @@ impl Piece {
 	}
 }
 
+// Implementation of the bitboard
 impl BitBoard {
 	pub fn empty() -> Self {
 		Self {
@@ -105,8 +108,10 @@ impl BitBoard {
 		}
 	}
 
+	// Defines the starting position of all the pieces. Uses hexa decimal to shorten the number
+	// Should be the only time this is set manually, I hate this
 	pub fn startpos() -> Self {
-		// Square mapping: a1 = bit 0, b1 = 1, ..., h8 = 63.
+		// mapping squares, 0 is a1
 		let mut bb = Self::empty();
 
 		// White
@@ -128,6 +133,7 @@ impl BitBoard {
 		bb
 	}
 
+	// Returns what type of piece is standing on a square if any
 	pub fn piece_at(&self, square: u8) -> Option<Piece> {
 		if square >= 64 {
 			return None;
@@ -157,6 +163,7 @@ impl BitBoard {
 		None
 	}
 
+	// Removes piece from square regardless of type
 	pub fn clear_square(&mut self, square: u8) {
 		if square >= 64 {
 			return;
@@ -172,6 +179,7 @@ impl BitBoard {
 		}
 	}
 
+	// Allows you to decide what piece should be at a square
 	pub fn set_piece(&mut self, square: u8, piece: Piece) {
 		if square >= 64 {
 			return;
@@ -189,6 +197,7 @@ impl BitBoard {
 	}
 }
 
+// matches input with color and returns 0 for white, 1 for black
 fn color_index(color: Color) -> usize {
 	match color {
 		Color::White => 0,

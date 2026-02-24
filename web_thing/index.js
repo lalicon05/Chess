@@ -1,9 +1,9 @@
-import init, { WasmGame } from "./pkg/chess_engine.js";
-
 let game = null;
 let flipped = false;
 let selectedSquare = null;
 let lastMove = null; // [fromIdx, toIdx]
+
+let wasmModule = null;
 
 const menuEl = document.getElementById("menu");
 const gameEl = document.getElementById("game");
@@ -28,8 +28,27 @@ const pieceToImg = {
 
 async function ensureGame() {
 	if (game) return;
-	await init();
-	game = new WasmGame();
+	const wasm = await ensureWasm();
+	game = new wasm.WasmGame();
+}
+
+async function ensureWasm() {
+	if (wasmModule) return wasmModule;
+	try {
+		// wasm-pack generates an ES module with a default `init()` export.
+		const m = await import("./pkg/chess_engine.js");
+		await m.default();
+		wasmModule = m;
+		return wasmModule;
+	} catch (e) {
+		// If `web_thing/pkg/` is missing, a static import would make the whole page blank.
+		// With a dynamic import we can show a clear error.
+		throw new Error(
+			"WASM package not found. Build it first from the chess_engine folder:\n\n" +
+			"  wasm-pack build --target web --out-dir ../web_thing/pkg\n\n" +
+			"Or in VS Code: Run Task → dev / wasm:build"
+		);
+	}
 }
 
 function showScene(scene) {
@@ -140,20 +159,28 @@ function onSquareClick(idx, board) {
 window.RenderScene = (scene) => showScene(scene);
 
 window.StartGame = async () => {
-	await ensureGame();
-	selectedSquare = null;
-	lastMove = null;
-	showScene(1);
-	render();
+	try {
+		await ensureGame();
+		selectedSquare = null;
+		lastMove = null;
+		showScene(1);
+		render();
+	} catch (e) {
+		alert(e?.message ?? String(e));
+	}
 };
 
 window.Rematch = async () => {
-	await ensureGame();
-	game.reset();
-	selectedSquare = null;
-	lastMove = null;
-	showScene(1);
-	render();
+	try {
+		await ensureGame();
+		game.reset();
+		selectedSquare = null;
+		lastMove = null;
+		showScene(1);
+		render();
+	} catch (e) {
+		alert(e?.message ?? String(e));
+	}
 };
 
 window.EndGame = (message) => {

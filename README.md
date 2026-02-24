@@ -30,8 +30,21 @@ Right now move application is intentionally simple (no legality checking, castli
 
 ### Run the web UI
 
-Because ES modules + WASM imports need an HTTP server (not `file://`), serve `web_thing/`:
+Because ES modules + WASM imports need an HTTP server (not `file://`), you must serve `web_thing/`.
+
+Note: **Live Server only serves files**; it does not compile Rust. You still need to run the WASM build step (once, or in watch mode) to keep `web_thing/pkg/` updated.
 
 - `cd web_thing`
 - `python -m http.server 8000`
 - Open `http://localhost:8000/` in your browser
+
+### VS Code workflow (recommended)
+
+This repo includes tasks in `.vscode/tasks.json`:
+
+- Run Task: `dev` (starts a rebuild-on-save loop + serves `web_thing/`)
+- Then open `http://localhost:8000/`
+
+If `cargo watch` is missing, install it once:
+
+- `cargo install cargo-watch`

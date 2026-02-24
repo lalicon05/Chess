@@ -1,0 +1,39 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "wasm:build",
+			"type": "shell",
+			"command": "wasm-pack build --target web --out-dir ../web_thing/pkg",
+			"options": {
+				"cwd": "${workspaceFolder}/chess_engine"
+			}
+		},
+		{
+			"label": "wasm:watch",
+			"type": "shell",
+			"command": "cargo watch -w src -s 'wasm-pack build --target web --out-dir ../web_thing/pkg'",
+			"options": {
+				"cwd": "${workspaceFolder}/chess_engine"
+			},
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "web:serve",
+			"type": "shell",
+			"command": "python -m http.server 8000",
+			"options": {
+				"cwd": "${workspaceFolder}/web_thing"
+			},
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "dev",
+			"dependsOn": ["wasm:watch", "web:serve"],
+			"dependsOrder": "parallel",
+			"problemMatcher": []
+		}
+	]
+}

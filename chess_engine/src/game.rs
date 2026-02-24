@@ -1,5 +1,6 @@
 use crate::board::{BitBoard, Color, Piece, PieceKind};
 
+// structure of the game itself, saves bitboard, halfmove clock and number of moves.
 #[derive(Debug, Clone)]
 pub struct Game {
     bitboard: BitBoard,
@@ -8,6 +9,7 @@ pub struct Game {
     fullmove_number: u32,
 }
 
+// Implementation of game wherw white starts.
 impl Game {
     pub fn new() -> Self {
         Self {
@@ -18,14 +20,17 @@ impl Game {
         }
     }
 
+    // Reset function, creates a new board
     pub fn reset(&mut self) {
         *self = Self::new();
     }
 
+    // Gets which side that has a turn
     pub fn side_to_move(&self) -> Color {
         self.side_to_move
     }
 
+    // Allows for FEN notation
     pub fn fen(&self) -> String {
         // Board
         let mut out = String::new();
