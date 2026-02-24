@@ -14,10 +14,18 @@
         <button onclick="StartGame()"> start game</button>
     </div>
 
-<div id="game" class"container">
-    <h1>Dennis (Chess engine)</h1>
-    <div id="main"></div>
-    <button onclick="EndGame('Motstandar vant, du trakk deg')"> Give up </button>
-    <button onclick="FlipBoard()">Switch sides</button>
-</div>
+    <div id="game" class"container">
+        <h1>Dennis (Chess engine)</h1>
+        <div id="main"></div>
+        <button onclick="EndGame('Motstandar vant, du trakk deg')"> Give up </button>
+        <button onclick="FlipBoard()">Switch sides</button>
+    </div>
+
+    <div id="result"" class="requestBox">
+        <p id="resultMessage"></p>
+        <button onclick="Rematch()"> Omkamp </button>    
+        <button onclick="RenderScene(0)"> Tilbake </button>
+    </div>
 </body>
+
+<script type="module" src="index.js"></script>
