@@ -1,6 +1,23 @@
-<head>
-    <meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="en">
+<head> 
+    <meta charset="utf-8" />
+    <meta name = "viewport" content = "width=device-width, initial-scale=1.0"/>
+    <title>Dennis the chess engis</title>
     <link rel="stylesheet" href="style.css">
 </head>
+    
+<body>
+    <div id="menu" class="container">
+        <h1> Sjakk Program</h1>
+        
+        <button onclick="StartGame()"> start game</button>
+    </div>
 
-<h1> Web thing testing</h1>
+<div id="game" class"container">
+    <h1>Dennis (Chess engine)</h1>
+    <div id="main"></div>
+    <button onclick="EndGame('Motstandar vant, du trakk deg')"> Give up </button>
+    <button onclick="FlipBoard()">Switch sides</button>
+</div>
+</body>
