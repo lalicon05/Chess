@@ -59,13 +59,139 @@ pub struct BitBoard {
 	queens: [u64; 2],
 	kings: [u64; 2],
 }
- 
-// enumeration of different pieces
-enum pieces {
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PieceKind {
 	Pawn,
 	Knight,
 	Bishop,
 	Rook,
 	Queen,
 	King,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Piece {
+	pub color: Color,
+	pub kind: PieceKind,
+}
+
+impl Piece {
+	pub fn fen_char(&self) -> char {
+		let c = match self.kind {
+			PieceKind::Pawn => 'p',
+			PieceKind::Knight => 'n',
+			PieceKind::Bishop => 'b',
+			PieceKind::Rook => 'r',
+			PieceKind::Queen => 'q',
+			PieceKind::King => 'k',
+		};
+		match self.color {
+			Color::White => c.to_ascii_uppercase(),
+			Color::Black => c,
+		}
+	}
+}
+
+impl BitBoard {
+	pub fn empty() -> Self {
+		Self {
+			pawns: [0; 2],
+			knights: [0; 2],
+			bishops: [0; 2],
+			rooks: [0; 2],
+			queens: [0; 2],
+			kings: [0; 2],
+		}
+	}
+
+	pub fn startpos() -> Self {
+		// Square mapping: a1 = bit 0, b1 = 1, ..., h8 = 63.
+		let mut bb = Self::empty();
+
+		// White
+		bb.pawns[0] = 0x0000_0000_0000_FF00;
+		bb.rooks[0] = 0x0000_0000_0000_0081;
+		bb.knights[0] = 0x0000_0000_0000_0042;
+		bb.bishops[0] = 0x0000_0000_0000_0024;
+		bb.queens[0] = 0x0000_0000_0000_0008;
+		bb.kings[0] = 0x0000_0000_0000_0010;
+
+		// Black
+		bb.pawns[1] = 0x00FF_0000_0000_0000;
+		bb.rooks[1] = 0x8100_0000_0000_0000;
+		bb.knights[1] = 0x4200_0000_0000_0000;
+		bb.bishops[1] = 0x2400_0000_0000_0000;
+		bb.queens[1] = 0x0800_0000_0000_0000;
+		bb.kings[1] = 0x1000_0000_0000_0000;
+
+		bb
+	}
+
+	pub fn piece_at(&self, square: u8) -> Option<Piece> {
+		if square >= 64 {
+			return None;
+		}
+		let mask = 1u64 << square;
+		for color in [Color::White, Color::Black] {
+			let idx = color_index(color);
+			if self.pawns[idx] & mask != 0 {
+				return Some(Piece { color, kind: PieceKind::Pawn });
+			}
+			if self.knights[idx] & mask != 0 {
+				return Some(Piece { color, kind: PieceKind::Knight });
+			}
+			if self.bishops[idx] & mask != 0 {
+				return Some(Piece { color, kind: PieceKind::Bishop });
+			}
+			if self.rooks[idx] & mask != 0 {
+				return Some(Piece { color, kind: PieceKind::Rook });
+			}
+			if self.queens[idx] & mask != 0 {
+				return Some(Piece { color, kind: PieceKind::Queen });
+			}
+			if self.kings[idx] & mask != 0 {
+				return Some(Piece { color, kind: PieceKind::King });
+			}
+		}
+		None
+	}
+
+	pub fn clear_square(&mut self, square: u8) {
+		if square >= 64 {
+			return;
+		}
+		let mask = !(1u64 << square);
+		for idx in 0..2 {
+			self.pawns[idx] &= mask;
+			self.knights[idx] &= mask;
+			self.bishops[idx] &= mask;
+			self.rooks[idx] &= mask;
+			self.queens[idx] &= mask;
+			self.kings[idx] &= mask;
+		}
+	}
+
+	pub fn set_piece(&mut self, square: u8, piece: Piece) {
+		if square >= 64 {
+			return;
+		}
+		let mask = 1u64 << square;
+		let idx = color_index(piece.color);
+		match piece.kind {
+			PieceKind::Pawn => self.pawns[idx] |= mask,
+			PieceKind::Knight => self.knights[idx] |= mask,
+			PieceKind::Bishop => self.bishops[idx] |= mask,
+			PieceKind::Rook => self.rooks[idx] |= mask,
+			PieceKind::Queen => self.queens[idx] |= mask,
+			PieceKind::King => self.kings[idx] |= mask,
+		}
+	}
+}
+
+fn color_index(color: Color) -> usize {
+	match color {
+		Color::White => 0,
+		Color::Black => 1,
+	}
 }

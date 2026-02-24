@@ -1,4 +1,4 @@
-mod board;
+use chess_engine::board;
 
 fn main() {
     println!("Hello world from main!");

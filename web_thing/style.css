@@ -1,4 +1,66 @@
-h1 {
-    color: rgb(255, 0, 0);
-    text-align: center;
+:root {
+    --size: 900px;
+    --squareColor1: rgb(255, 241, 204);
+    --squareColor2: rgb(110, 129, 61);
+}
+
+#main {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    gap: 0px;
+    width: var(--size);
+    height: var(--size);
+    margin: 0 auto 0 auto;
+    color: black;
+}
+
+.square {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    width: calc(var(--size) / 8);
+    height: calc(var(--size) / 8);
+    border: 1px solid black;
+}
+
+.square img {
+    pointer-events: none;
+    user-select: none;
+    position: relative;
+    transition: 0.2s;
+    top: 0px;
+    left: 0px;
+    z-index: 1;
+    max-width: 92%;
+    max-height: 92%;
+}
+
+.white {
+    background-color: var(--squareColor1);
+}
+
+.brown {
+    background-color: var(--squareColor2);
+}
+
+.white.yellow {
+    background-color: rgb(255, 233, 107);
+}
+
+.brown.yellow {
+    background-color: rgb(242, 207, 6);
+}
+
+
+.white.blue {
+    background-color: rgb(99, 182, 255);
+}
+.brown.blue {
+    background-color: rgb(44, 157, 255);
+}
+
+.red {
+    background-color: rgb(255, 55, 55);
 }
