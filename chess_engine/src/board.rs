@@ -195,6 +195,140 @@ impl BitBoard {
 			PieceKind::King => self.kings[idx] |= mask,
 		}
 	}
+
+	// Returns a bitboard of all pieces of a given color
+	pub fn occupancy_for(&self, color: Color) -> u64 {
+		let idx = color_index(color);
+		self.pawns[idx]
+			| self.knights[idx]
+			| self.bishops[idx]
+			| self.rooks[idx]
+			| self.queens[idx]
+			| self.kings[idx]
+	}
+
+	// Returns a bitboard of all pieces (both colors)
+	pub fn all_occupancy(&self) -> u64 {
+		self.occupancy_for(Color::White) | self.occupancy_for(Color::Black)
+	}
+
+	// Finds the square of the king for a given color
+	pub fn king_square(&self, color: Color) -> Option<u8> {
+		let idx = color_index(color);
+		let king_bb = self.kings[idx];
+		if king_bb == 0 {
+			return None;
+		}
+		Some(king_bb.trailing_zeros() as u8)
+	}
+
+	// Check if a square is attacked by a given color
+	pub fn is_square_attacked(&self, square: u8, by_color: Color) -> bool {
+		if square >= 64 {
+			return false;
+		}
+		let idx = color_index(by_color);
+		let occupancy = self.all_occupancy();
+
+		// Pawn attacks
+		let pawn_attacks = match by_color {
+			Color::White => {
+				let mut attacks = 0u64;
+				if square >= 8 && square % 8 != 0 {
+					attacks |= 1u64 << (square - 9); // down-left
+				}
+				if square >= 8 && square % 8 != 7 {
+					attacks |= 1u64 << (square - 7); // down-right
+				}
+				attacks
+			}
+			Color::Black => {
+				let mut attacks = 0u64;
+				if square < 56 && square % 8 != 0 {
+					attacks |= 1u64 << (square + 7); // up-left
+				}
+				if square < 56 && square % 8 != 7 {
+					attacks |= 1u64 << (square + 9); // up-right
+				}
+				attacks
+			}
+		};
+		if self.pawns[idx] & pawn_attacks != 0 {
+			return true;
+		}
+
+		// Knight attacks
+		let knight_offsets: [(i8, i8); 8] = [
+			(2, 1), (2, -1), (-2, 1), (-2, -1),
+			(1, 2), (1, -2), (-1, 2), (-1, -2),
+		];
+		for (df, dr) in knight_offsets {
+			let f = (square % 8) as i8 + df;
+			let r = (square / 8) as i8 + dr;
+			if f >= 0 && f < 8 && r >= 0 && r < 8 {
+				let target = (r * 8 + f) as u8;
+				if self.knights[idx] & (1u64 << target) != 0 {
+					return true;
+				}
+			}
+		}
+
+		// King attacks (for detecting checks from enemy king, though rare)
+		let king_offsets: [(i8, i8); 8] = [
+			(1, 0), (-1, 0), (0, 1), (0, -1),
+			(1, 1), (1, -1), (-1, 1), (-1, -1),
+		];
+		for (df, dr) in king_offsets {
+			let f = (square % 8) as i8 + df;
+			let r = (square / 8) as i8 + dr;
+			if f >= 0 && f < 8 && r >= 0 && r < 8 {
+				let target = (r * 8 + f) as u8;
+				if self.kings[idx] & (1u64 << target) != 0 {
+					return true;
+				}
+			}
+		}
+
+		// Sliding pieces: bishops, rooks, queens
+		// Check all 8 directions
+		let directions: [(i8, i8); 8] = [
+			(1, 0), (-1, 0), (0, 1), (0, -1),   // rook directions
+			(1, 1), (1, -1), (-1, 1), (-1, -1), // bishop directions
+		];
+
+		for (df, dr) in directions {
+			let mut f = (square % 8) as i8;
+			let mut r = (square / 8) as i8;
+			let is_diagonal = df != 0 && dr != 0;
+
+			loop {
+				f += df;
+				r += dr;
+				if f < 0 || f >= 8 || r < 0 || r >= 8 {
+					break;
+				}
+				let target = (r * 8 + f) as u8;
+				let target_mask = 1u64 << target;
+
+				// If there's a piece in the way
+				if occupancy & target_mask != 0 {
+					// Check if it's an attacking piece
+					if is_diagonal {
+						if self.bishops[idx] & target_mask != 0 || self.queens[idx] & target_mask != 0 {
+							return true;
+						}
+					} else {
+						if self.rooks[idx] & target_mask != 0 || self.queens[idx] & target_mask != 0 {
+							return true;
+						}
+					}
+					break; // Stop in this direction
+				}
+			}
+		}
+
+		false
+	}
 }
 
 // matches input with color and returns 0 for white, 1 for black

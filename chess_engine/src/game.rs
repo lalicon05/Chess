@@ -9,7 +9,7 @@ pub struct Game {
     fullmove_number: u32,
 }
 
-// Implementation of game wherw white starts.
+// Implementation of game where white starts and board is in start pos
 impl Game {
     pub fn new() -> Self {
         Self {
@@ -92,28 +92,43 @@ impl Game {
             return Err("It's not that side's turn".to_string());
         }
 
-        // Clear capture square (if any).
+        // Check destination isn't occupied by own piece
         if let Some(captured) = self.bitboard.piece_at(to) {
             if captured.color == moving_piece.color {
                 return Err("Cannot capture your own piece".to_string());
             }
-            self.bitboard.clear_square(to);
         }
 
-        // Move the piece.
+        // Validate move is pseudo-legal
+        if !self.is_move_pseudo_legal(from, to, moving_piece) {
+            return Err("Illegal move: piece cannot move there".to_string());
+        }
+
+        // Check if move would leave king in check
+        let mut temp_game = self.clone();
+        temp_game.apply_move_unchecked(from, to, promotion);
+        if temp_game.is_in_check(self.side_to_move) {
+            return Err("Illegal move: king would be in check".to_string());
+        }
+
+        // Move is legal, apply it
+        self.apply_move_unchecked(from, to, promotion);
+        Ok(())
+    }
+
+    // Apply a move without validation
+    fn apply_move_unchecked(&mut self, from: u8, to: u8, promotion: Option<PieceKind>) {
+        let moving_piece = self.bitboard.piece_at(from).unwrap();
+
+        // Clear capture square
+        self.bitboard.clear_square(to);
+
+        // Move the piece
         self.bitboard.clear_square(from);
 
         let final_kind = if moving_piece.kind == PieceKind::Pawn {
-            if let Some(promo) = promotion {
-                // Promotion only makes sense on last rank, but we keep it simple.
-                promo
-            } else {
-                PieceKind::Pawn
-            }
+            promotion.unwrap_or(PieceKind::Pawn)
         } else {
-            if promotion.is_some() {
-                return Err("Promotion is only valid for pawns".to_string());
-            }
             moving_piece.kind
         };
 
@@ -122,13 +137,184 @@ impl Game {
             kind: final_kind,
         });
 
-        // Update clocks (very simplified)
+        // Update clocks
         self.halfmove_clock = 0;
         if self.side_to_move == Color::Black {
             self.fullmove_number += 1;
         }
         self.side_to_move = self.side_to_move.opposite();
-        Ok(())
+    }
+
+    // Check if a move is pseudo-legal
+    fn is_move_pseudo_legal(&self, from: u8, to: u8, piece: Piece) -> bool {
+        if from == to {
+            return false;
+        }
+
+        let from_file = from % 8;
+        let from_rank = from / 8;
+        let to_file = to % 8;
+        let to_rank = to / 8;
+        let file_diff = (to_file as i8 - from_file as i8).abs();
+        let rank_diff = (to_rank as i8 - from_rank as i8).abs();
+
+        let occupancy = self.bitboard.all_occupancy();
+
+        match piece.kind {
+            PieceKind::Pawn => {
+                let forward = match piece.color {
+                    Color::White => 1i8,
+                    Color::Black => -1i8,
+                };
+                let start_rank = match piece.color {
+                    Color::White => 1,
+                    Color::Black => 6,
+                };
+
+                // Single push
+                if to_file == from_file && to_rank as i8 == from_rank as i8 + forward {
+                    return self.bitboard.piece_at(to).is_none();
+                }
+
+                // Double push
+                if to_file == from_file 
+                    && from_rank == start_rank
+                    && to_rank as i8 == from_rank as i8 + 2 * forward {
+                    let mid_square = ((from_rank as i8 + forward) * 8 + from_file as i8) as u8;
+                    return self.bitboard.piece_at(mid_square).is_none()
+                        && self.bitboard.piece_at(to).is_none();
+                }
+
+                // Capture
+                if file_diff == 1 && to_rank as i8 == from_rank as i8 + forward {
+                    return self.bitboard.piece_at(to).is_some();
+                }
+
+                false
+            }
+
+            PieceKind::Knight => {
+                (file_diff == 2 && rank_diff == 1) || (file_diff == 1 && rank_diff == 2)
+            }
+
+            PieceKind::King => {
+                file_diff <= 1 && rank_diff <= 1
+            }
+
+            PieceKind::Bishop => {
+                if file_diff != rank_diff {
+                    return false;
+                }
+                self.is_path_clear(from, to, occupancy)
+            }
+
+            PieceKind::Rook => {
+                if from_file != to_file && from_rank != to_rank {
+                    return false;
+                }
+                self.is_path_clear(from, to, occupancy)
+            }
+
+            PieceKind::Queen => {
+                if from_file != to_file && from_rank != to_rank && file_diff != rank_diff {
+                    return false;
+                }
+                self.is_path_clear(from, to, occupancy)
+            }
+        }
+    }
+
+    // Check if path between two squares is clear (for sliding pieces)
+    fn is_path_clear(&self, from: u8, to: u8, occupancy: u64) -> bool {
+        let from_file = from % 8;
+        let from_rank = from / 8;
+        let to_file = to % 8;
+        let to_rank = to / 8;
+
+        let file_step: i8 = (to_file as i8 - from_file as i8).signum();
+        let rank_step: i8 = (to_rank as i8 - from_rank as i8).signum();
+
+        let mut current_file = from_file as i8 + file_step;
+        let mut current_rank = from_rank as i8 + rank_step;
+
+        while current_file != to_file as i8 || current_rank != to_rank as i8 {
+            let sq = (current_rank * 8 + current_file) as u8;
+            if occupancy & (1u64 << sq) != 0 {
+                return false;
+            }
+            current_file += file_step;
+            current_rank += rank_step;
+        }
+
+        true
+    }
+
+    // Check if a given color's king is currently in check
+    fn is_in_check(&self, color: Color) -> bool {
+        if let Some(king_sq) = self.bitboard.king_square(color) {
+            self.bitboard.is_square_attacked(king_sq, color.opposite())
+        } else {
+            false
+        }
+    }
+
+    // Check game status
+    // Now checks for Checkmate or stalemate or if the check is wscapable
+    pub fn game_status(&self) -> GameStatus {
+        let has_legal_moves = self.has_any_legal_move();
+        let in_check = self.is_in_check(self.side_to_move);
+        
+        if !has_legal_moves {
+            if in_check {
+                GameStatus::Checkmate // Current side is checkmated
+            } else {
+                GameStatus::Stalemate // Draw
+            }
+        } else if in_check {
+            GameStatus::Check // In check but can escape
+        } else {
+            GameStatus::InProgress
+        }
+    }
+
+    // Check if current side has any legal move
+    fn has_any_legal_move(&self) -> bool {
+        // Try every piece of current side
+        for from in 0..64 {
+            if let Some(piece) = self.bitboard.piece_at(from) {
+                if piece.color != self.side_to_move {
+                    continue;
+                }
+                
+                // Try all possible destinations
+                for to in 0..64 {
+                    if self.is_move_legal_internal(from, to, piece, None) {
+                        return true; // Found at least one legal move
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    // Internal: check if move is legal (doesn't modify board)
+    fn is_move_legal_internal(&self, from: u8, to: u8, piece: Piece, promotion: Option<PieceKind>) -> bool {
+        // Check destination
+        if let Some(captured) = self.bitboard.piece_at(to) {
+            if captured.color == piece.color {
+                return false;
+            }
+        }
+        
+        // Check pseudo-legality
+        if !self.is_move_pseudo_legal(from, to, piece) {
+            return false;
+        }
+        
+        // Check king safety
+        let mut temp = self.clone();
+        temp.apply_move_unchecked(from, to, promotion);
+        !temp.is_in_check(self.side_to_move)
     }
 }
 
