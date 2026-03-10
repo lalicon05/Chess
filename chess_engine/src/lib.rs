@@ -1,7 +1,7 @@
 pub mod board;
 pub mod game;
 
-pub use game::Game;
+pub use game::{Game, GameStatus};
 
 // WebAssembly bridge.
 // Keeps the core engine usable from native Rust (tests/CLI) while exposing a small API to JS.
@@ -9,7 +9,7 @@ pub use game::Game;
 mod wasm_api {
     use wasm_bindgen::prelude::*;
 
-    use crate::game::Game;
+    use crate::game::{Game, GameStatus};
 
     #[wasm_bindgen]
     pub struct WasmGame {
@@ -37,6 +37,16 @@ mod wasm_api {
             self.inner
                 .make_move_uci(mv)
                 .map_err(|e| JsValue::from_str(&e))
+        }
+
+        // Returns game status: "in_progress", "check", "checkmate", or "stalemate"
+        pub fn game_status(&self) -> String {
+            match self.inner.game_status() {
+                GameStatus::InProgress => "in_progress".to_string(),
+                GameStatus::Check => "check".to_string(),
+                GameStatus::Checkmate => "checkmate".to_string(),
+                GameStatus::Stalemate => "stalemate".to_string(),
+            }
         }
     }
 }

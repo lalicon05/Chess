@@ -124,6 +124,18 @@ function render() {
 			mainEl.appendChild(square);
 		}
 	}
+
+	// Check for checkmate/stalemate
+	const status = game.game_status();
+	if (status === "checkmate") {
+		const loser = fen.split(" ")[1] === "w" ? "White" : "Black";
+		const winner = loser === "White" ? "Black" : "White";
+		EndGame(`Checkmate! ${winner} wins!`);
+	} else if (status === "stalemate") {
+		EndGame("Stalemate - Draw!");
+	} else if (status === "check") {
+		console.log("Check!");
+	}
 }
 
 function onSquareClick(idx, board) {
@@ -146,6 +158,7 @@ function onSquareClick(idx, board) {
 	try {
 		game.make_move_uci(uci);
 		lastMove = [selectedSquare, idx];
+		console.log("Move applied:", uci, "Status:", game.game_status());
 	} catch (e) {
 		// wasm-bindgen throws a JS Error for Result::Err
 		alert(e?.message ?? String(e));

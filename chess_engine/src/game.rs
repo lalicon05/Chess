@@ -1,5 +1,14 @@
 use crate::board::{BitBoard, Color, Piece, PieceKind};
 
+// Game status enum for checkmate detection
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GameStatus {
+    InProgress,
+    Check,
+    Checkmate,
+    Stalemate,
+}
+
 // structure of the game itself, saves bitboard, halfmove clock and number of moves.
 #[derive(Debug, Clone)]
 pub struct Game {
