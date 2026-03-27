@@ -4,7 +4,7 @@ pub mod game;
 pub use game::{Game, GameStatus};
 
 // WebAssembly bridge.
-// Keeps the core engine usable from native Rust (tests/CLI) while exposing a small API to JS.
+// Keeps the core engine usable from native Rust while exposing a small API to JS.
 #[cfg(target_arch = "wasm32")]
 mod wasm_api {
     use wasm_bindgen::prelude::*;
@@ -32,7 +32,7 @@ mod wasm_api {
         }
 
         // Accepts a UCI move like "e2e4" or "e7e8q".
-        // For now this is a simple piece move (no legality checking, castling, or en-passant yet).
+        // For now this is a simple piece move, legality is checked in game.rs
         pub fn make_move_uci(&mut self, mv: &str) -> Result<(), JsValue> {
             self.inner
                 .make_move_uci(mv)
