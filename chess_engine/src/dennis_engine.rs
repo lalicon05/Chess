@@ -10,7 +10,7 @@ pub struct DennisEngine;
 
 impl DennisEngine {
     pub fn pick_move(game: &Game) -> Option<Move> {
-        let moves = game.generate_legal_moves();
+        let moves = game.generate_legal_moves(); // TODO: make this
 
         if moves.is_empty() {
             return None;
