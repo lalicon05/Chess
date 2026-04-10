@@ -2,6 +2,7 @@ let game = null;
 let flipped = false;
 let selectedSquare = null;
 let lastMove = null; // [fromIdx, toIdx]
+let gameMode = "pvp"; // "pvp" | "engine"
 
 let wasmModule = null;
 
@@ -138,11 +139,23 @@ function render() {
 	}
 }
 
-function onSquareClick(idx, board) {
+async function onSquareClick(idx, board) {
 	if (!game) return;
 
+	// In engine mode, only allow human (white) to move on white's turn.
+	if (gameMode === "engine" && sideToMoveFromFen() !== "w") {
+		return;
+	}
+
 	if (selectedSquare === null) {
-		if (!board[idx]) return;
+		const piece = board[idx];
+		if (!piece) return;
+
+		// In engine mode, human can only select white pieces.
+		if (gameMode === "engine" && piece !== piece.toUpperCase()) {
+			return;
+		}
+
 		selectedSquare = idx;
 		render();
 		return;
@@ -155,25 +168,65 @@ function onSquareClick(idx, board) {
 	}
 
 	const uci = idxToSquare(selectedSquare) + idxToSquare(idx);
+	let moved = false;
+
 	try {
 		game.make_move_uci(uci);
 		lastMove = [selectedSquare, idx];
-		console.log("Move applied:", uci, "Status:", game.game_status());
+		moved = true;
 	} catch (e) {
-		// wasm-bindgen throws a JS Error for Result::Err
 		alert(e?.message ?? String(e));
 	} finally {
 		selectedSquare = null;
 		render();
+	}
+
+	if (moved) {
+		await maybeEngineMove();
+	}
+}
+
+function squareToIdx(square) {
+	const file = square.charCodeAt(0) - 97; // a -> 0
+	const rank = Number(square[1]) - 1;     // "1" -> 0
+	return rank * 8 + file;
+}
+
+function sideToMoveFromFen() {
+	return game.fen().split(" ")[1]; // "w" or "b"
+}
+
+function isTerminalStatus(status) {
+	return status === "checkmate" || status === "stalemate";
+}
+
+async function maybeEngineMove() {
+	if (!game || gameMode !== "engine") return;
+	if (sideToMoveFromFen() !== "b") return; // human is white, engine is black
+
+	const status = game.game_status();
+	if (isTerminalStatus(status)) return;
+
+	try {
+		const mv = game.make_engine_move(); // returns UCI, e.g. "e7e5"
+		if (mv && mv.length >= 4) {
+			lastMove = [squareToIdx(mv.slice(0, 2)), squareToIdx(mv.slice(2, 4))];
+		}
+		selectedSquare = null;
+		render();
+	} catch (e) {
+		alert(e?.message ?? String(e));
 	}
 }
 
 // Expose the HTML onclick handlers.
 window.RenderScene = (scene) => showScene(scene);
 
-window.StartGame = async () => {
+window.StartGame = async (mode = "pvp") => {
 	try {
 		await ensureGame();
+		game.reset();
+		gameMode = mode;
 		selectedSquare = null;
 		lastMove = null;
 		showScene(1);
