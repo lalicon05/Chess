@@ -325,6 +325,48 @@ impl Game {
         temp.apply_move_unchecked(from, to, promotion);
         !temp.is_in_check(self.side_to_move)
     }
+
+    pub fn generate_legal_moves(&self) -> Vec<String> {
+        let mut moves = Vec::new();
+
+        for from in 0u8..64u8 {
+            let Some(piece) = self.bitboard.piece_at(from) else {
+                continue;
+            };
+            if piece.color != self.side_to_move {
+                continue;
+            }
+
+            for to in 0u8..64u8 {
+                // First check base legality
+                if !self.is_move_legal_internal(from, to, piece, None) {
+                    continue;
+                }
+
+                // Handle pawn promotions as explicit UCI moves (q/r/b/n)
+                if piece.kind == PieceKind::Pawn {
+                    let to_rank = to / 8;
+                    let promotion_rank = match piece.color {
+                        Color::White => 7,
+                        Color::Black => 0,
+                    };
+
+                    if to_rank == promotion_rank {
+                        for promo in [PieceKind::Queen, PieceKind::Rook, PieceKind::Bishop, PieceKind::Knight] {
+                            if self.is_move_legal_internal(from, to, piece, Some(promo)) {
+                                moves.push(move_to_uci(from, to, Some(promo)));
+                            }
+                        }
+                        continue;
+                    }
+                }
+
+                moves.push(move_to_uci(from, to, None));
+            }
+        }
+
+        moves
+    }
 }
 
 fn parse_square(s: &str) -> Result<u8, String> {
@@ -353,4 +395,27 @@ fn parse_promotion(c: char) -> Result<PieceKind, String> {
         'n' => Ok(PieceKind::Knight),
         _ => Err("Promotion must be one of q,r,b,n".to_string()),
     }
+}
+
+fn move_to_uci(from: u8, to: u8, promotion: Option<PieceKind>) -> String {
+    let mut s = String::with_capacity(5);
+    s.push((b'a' + (from % 8)) as char);
+    s.push((b'1' + (from / 8)) as char);
+    s.push((b'a' + (to % 8)) as char);
+    s.push((b'1' + (to / 8)) as char);
+
+    if let Some(p) = promotion {
+        let promo = match p {
+            PieceKind::Queen => Some('q'),
+            PieceKind::Rook => Some('r'),
+            PieceKind::Bishop => Some('b'),
+            PieceKind::Knight => Some('n'),
+            _ => None,
+        };
+        if let Some(ch) = promo {
+            s.push(ch);
+        }
+    }
+
+    s
 }

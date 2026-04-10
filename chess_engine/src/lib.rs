@@ -48,5 +48,20 @@ mod wasm_api {
                 GameStatus::Stalemate => "stalemate".to_string(),
             }
         }
+
+        pub fn make_engine_move(&mut self) -> Result<String, JsValue> {
+            let mv = self
+                .inner
+                .generate_legal_moves()
+                .into_iter()
+                .next()
+                .ok_or_else(|| JsValue::from_str("No legal moves available"))?;
+
+            self.inner
+                .make_move_uci(&mv)
+                .map_err(|e| JsValue::from_str(&e))?;
+
+            Ok(mv)
+        }
     }
 }
