@@ -1,4 +1,5 @@
 pub mod board;
+pub mod dennis_engine;
 pub mod game;
 
 pub use game::{Game, GameStatus};
@@ -9,6 +10,7 @@ pub use game::{Game, GameStatus};
 mod wasm_api {
     use wasm_bindgen::prelude::*;
 
+    use crate::dennis_engine::DennisEngine;
     use crate::game::{Game, GameStatus};
 
     #[wasm_bindgen]
@@ -50,11 +52,7 @@ mod wasm_api {
         }
 
         pub fn make_engine_move(&mut self) -> Result<String, JsValue> {
-            let mv = self
-                .inner
-                .generate_legal_moves()
-                .into_iter()
-                .next()
+            let mv = DennisEngine::pick_move(&self.inner)
                 .ok_or_else(|| JsValue::from_str("No legal moves available"))?;
 
             self.inner
