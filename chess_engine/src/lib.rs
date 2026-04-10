@@ -1,5 +1,6 @@
 pub mod board;
 pub mod dennis_engine;
+pub mod eval;
 pub mod game;
 
 pub use game::{Game, GameStatus};
@@ -53,6 +54,17 @@ mod wasm_api {
 
         pub fn make_engine_move(&mut self) -> Result<String, JsValue> {
             let mv = DennisEngine::pick_move(&self.inner)
+                .ok_or_else(|| JsValue::from_str("No legal moves available"))?;
+
+            self.inner
+                .make_move_uci(&mv)
+                .map_err(|e| JsValue::from_str(&e))?;
+
+            Ok(mv)
+        }
+
+        pub fn make_engine_move_limited(&mut self, max_depth: u8, max_time_ms: u64) -> Result<String, JsValue> {
+            let mv = DennisEngine::pick_move_with_limits(&self.inner, max_depth, max_time_ms)
                 .ok_or_else(|| JsValue::from_str("No legal moves available"))?;
 
             self.inner

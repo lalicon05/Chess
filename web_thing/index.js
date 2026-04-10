@@ -3,6 +3,7 @@ let flipped = false;
 let selectedSquare = null;
 let lastMove = null; // [fromIdx, toIdx]
 let gameMode = "pvp"; // "pvp" | "engine"
+let engineBusy = false;
 
 let wasmModule = null;
 
@@ -182,7 +183,9 @@ async function onSquareClick(idx, board) {
 	}
 
 	if (moved) {
-		await maybeEngineMove();
+		setTimeout(() => {
+			void maybeEngineMove();
+		}, 0);
 	}
 }
 
@@ -201,12 +204,13 @@ function isTerminalStatus(status) {
 }
 
 async function maybeEngineMove() {
-	if (!game || gameMode !== "engine") return;
+	if (!game || gameMode !== "engine" || engineBusy) return;
 	if (sideToMoveFromFen() !== "b") return; // human is white, engine is black
 
 	const status = game.game_status();
 	if (isTerminalStatus(status)) return;
 
+	engineBusy = true;
 	try {
 		const mv = game.make_engine_move(); // returns UCI, e.g. "e7e5"
 		if (mv && mv.length >= 4) {
@@ -216,6 +220,8 @@ async function maybeEngineMove() {
 		render();
 	} catch (e) {
 		alert(e?.message ?? String(e));
+	} finally {
+		engineBusy = false;
 	}
 }
 
