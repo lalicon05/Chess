@@ -1,7 +1,5 @@
-use chess_engine::board;
+use chess_engine::uci::run_uci_loop;
 
-// There is currently nothing here. Maybe it will be deleted
 fn main() {
-    println!("Hello world from main!");
-	board::hello_from_board();
+    run_uci_loop();
 }

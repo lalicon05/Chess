@@ -2,6 +2,7 @@ pub mod board;
 pub mod dennis_engine;
 pub mod eval;
 pub mod game;
+pub mod uci;
 
 pub use game::{Game, GameStatus};
 
