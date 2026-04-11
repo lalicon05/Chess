@@ -205,20 +205,22 @@ function isTerminalStatus(status) {
 
 async function maybeEngineMove() {
 	if (!game || gameMode !== "engine" || engineBusy) return;
-	if (sideToMoveFromFen() !== "b") return; // human is white, engine is black
+	if (sideToMoveFromFen() !== "b") return;
 
 	const status = game.game_status();
 	if (isTerminalStatus(status)) return;
 
 	engineBusy = true;
 	try {
-		const mv = game.make_engine_move(); // returns UCI, e.g. "e7e5"
+		// Keep this conservative while debugging stability
+		const mv = game.make_engine_move_limited(12, 2000n);
 		if (mv && mv.length >= 4) {
 			lastMove = [squareToIdx(mv.slice(0, 2)), squareToIdx(mv.slice(2, 4))];
 		}
 		selectedSquare = null;
 		render();
 	} catch (e) {
+		console.error("Engine move failed:", e);
 		alert(e?.message ?? String(e));
 	} finally {
 		engineBusy = false;
@@ -230,11 +232,11 @@ window.RenderScene = (scene) => showScene(scene);
 
 window.StartGame = async (mode = "pvp") => {
 	try {
-		await ensureGame();
-		game.reset();
+		await createFreshGame(); // fresh instance every new game
 		gameMode = mode;
 		selectedSquare = null;
 		lastMove = null;
+		engineBusy = false;
 		showScene(1);
 		render();
 	} catch (e) {
@@ -244,10 +246,10 @@ window.StartGame = async (mode = "pvp") => {
 
 window.Rematch = async () => {
 	try {
-		await ensureGame();
-		game.reset();
+		await createFreshGame(); // don't call reset on possibly poisoned object
 		selectedSquare = null;
 		lastMove = null;
+		engineBusy = false;
 		showScene(1);
 		render();
 	} catch (e) {
@@ -267,3 +269,8 @@ window.FlipBoard = () => {
 
 // Initial state
 showScene(0);
+
+async function createFreshGame() {
+	const wasm = await ensureWasm();
+	game = new wasm.WasmGame();
+}

@@ -1,6 +1,7 @@
 // File that will contain Dennis the chess engine
 
-use std::time::{Duration, Instant};
+use std::time::Duration;
+use web_time::Instant;
 
 use crate::eval::{evaluate, MATE_SCORE};
 use crate::game::{Game, GameStatus};

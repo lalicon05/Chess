@@ -121,13 +121,17 @@ impl Game {
         }
 
         // Move is legal, apply it
-        self.apply_move_unchecked(from, to, promotion);
+        if !self.apply_move_unchecked(from, to, promotion) {
+            return Err("Internal move application failed".to_string());
+        }
         Ok(())
     }
 
     // Apply a move without validation
-    fn apply_move_unchecked(&mut self, from: u8, to: u8, promotion: Option<PieceKind>) {
-        let moving_piece = self.bitboard.piece_at(from).unwrap();
+    fn apply_move_unchecked(&mut self, from: u8, to: u8, promotion: Option<PieceKind>) -> bool {
+        let Some(moving_piece) = self.bitboard.piece_at(from) else {
+            return false;
+        };
 
         // Clear capture square
         self.bitboard.clear_square(to);
@@ -152,6 +156,8 @@ impl Game {
             self.fullmove_number += 1;
         }
         self.side_to_move = self.side_to_move.opposite();
+
+        true
     }
 
     // Check if a move is pseudo-legal
@@ -322,7 +328,9 @@ impl Game {
         
         // Check king safety
         let mut temp = self.clone();
-        temp.apply_move_unchecked(from, to, promotion);
+        if !temp.apply_move_unchecked(from, to, promotion) {
+            return false;
+        }
         !temp.is_in_check(self.side_to_move)
     }
 
