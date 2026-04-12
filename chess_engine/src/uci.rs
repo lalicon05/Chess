@@ -81,13 +81,19 @@ fn set_position(cmd: &str, game: &mut Game) -> Result<(), String> {
     let rest = cmd.strip_prefix("position").unwrap_or("").trim();
 
     if rest.starts_with("startpos") {
-        game.reset();
+        // Build on a temp position first (atomic update).
+        let mut temp = Game::new();
 
-        if let Some(moves_part) = rest.strip_prefix("startpos").unwrap_or("").trim().strip_prefix("moves") {
+        let after_startpos = rest.strip_prefix("startpos").unwrap_or("").trim();
+        if let Some(moves_part) = after_startpos.strip_prefix("moves") {
             for mv in moves_part.split_whitespace() {
-                game.make_move_uci(mv)?;
+                temp.make_move_uci(mv)
+                    .map_err(|e| format!("invalid move '{mv}': {e}"))?;
             }
         }
+
+        // Commit only if everything succeeded
+        *game = temp;
         return Ok(());
     }
 
