@@ -213,7 +213,7 @@ async function maybeEngineMove() {
 	engineBusy = true;
 	try {
 		// Keep this conservative while debugging stability
-		const mv = game.make_engine_move_limited(12, 2000n);
+		const mv = game.make_engine_move_limited(12, 3000n);
 		if (mv && mv.length >= 4) {
 			lastMove = [squareToIdx(mv.slice(0, 2)), squareToIdx(mv.slice(2, 4))];
 		}

@@ -81,7 +81,7 @@ fn set_position(cmd: &str, game: &mut Game) -> Result<(), String> {
     let rest = cmd.strip_prefix("position").unwrap_or("").trim();
 
     if rest.starts_with("startpos") {
-        // Build on a temp position first (atomic update).
+        // Build on a temp position first
         let mut temp = Game::new();
 
         let after_startpos = rest.strip_prefix("startpos").unwrap_or("").trim();
@@ -107,7 +107,7 @@ fn set_position(cmd: &str, game: &mut Game) -> Result<(), String> {
 fn parse_go_limits(cmd: &str) -> (u8, u64) {
     // Defaults for v1
     let mut depth: u8 = 10;
-    let mut movetime_ms: u64 = 2000;
+    let mut movetime_ms: u64 = 5000;
 
     let tokens: Vec<&str> = cmd.split_whitespace().collect();
     let mut i = 1usize; // skip "go"

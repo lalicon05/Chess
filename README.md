@@ -37,3 +37,6 @@ The live server does not compile so in order to play, please follow instructions
 - `cd web_thing`
 - `python -m http.server 8000`
 - Open `http://localhost:8000/` in your browser
+
+In order to build the bot to a .exe, run:
+"cargo build --release --bin chess_engine_cli"

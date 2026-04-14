@@ -113,6 +113,21 @@ impl Game {
             return Err("Illegal move: piece cannot move there".to_string());
         }
 
+        // Extra castling checks
+        if is_castling_move(from, to, moving_piece) {
+            if self.is_in_check(self.side_to_move) {
+                return Err("Illegal move: cannot castle out of check".to_string());
+            }
+            let mid = castling_mid_square(from, to).unwrap();
+            let mut mid_game = self.clone();
+            if !mid_game.apply_move_unchecked(from, mid, None) {
+                return Err("Illegal move: cannot castle through check".to_string());
+            }
+            if mid_game.is_in_check(self.side_to_move) {
+                return Err("Illegal move: cannot castle through check".to_string());
+            }
+        }
+
         // Check if move would leave king in check
         let mut temp_game = self.clone();
         temp_game.apply_move_unchecked(from, to, promotion);
@@ -133,6 +148,8 @@ impl Game {
             return false;
         };
 
+        let castle_rook_move = castle_rook_move(from, to, moving_piece);
+
         // Clear capture square
         self.bitboard.clear_square(to);
 
@@ -149,6 +166,15 @@ impl Game {
             color: moving_piece.color,
             kind: final_kind,
         });
+
+      
+        if let Some((rook_from, rook_to)) = castle_rook_move {
+            self.bitboard.clear_square(rook_from);
+            self.bitboard.set_piece(rook_to, Piece {
+                color: moving_piece.color,
+                kind: PieceKind::Rook,
+            });
+        }
 
         // Update clocks
         self.halfmove_clock = 0;
@@ -213,7 +239,43 @@ impl Game {
             }
 
             PieceKind::King => {
-                file_diff <= 1 && rank_diff <= 1
+                if file_diff <= 1 && rank_diff <= 1 {
+                    return true;
+                }
+
+                if !is_castling_move(from, to, piece) {
+                    return false;
+                }
+
+                let (rook_from, _) = match (piece.color, to_file) {
+                    (Color::White, 6) => (7u8, 5u8),   // e1g1
+                    (Color::White, 2) => (0u8, 3u8),   // e1c1
+                    (Color::Black, 6) => (63u8, 61u8), // e8g8
+                    (Color::Black, 2) => (56u8, 59u8), // e8c8
+                    _ => return false,
+                };
+
+                if self.bitboard.piece_at(rook_from) != Some(Piece { color: piece.color, kind: PieceKind::Rook }) {
+                    return false;
+                }
+
+                let between_clear = match (piece.color, to_file) {
+                    (Color::White, 6) => self.bitboard.piece_at(5).is_none() && self.bitboard.piece_at(6).is_none(),
+                    (Color::White, 2) => {
+                        self.bitboard.piece_at(1).is_none()
+                            && self.bitboard.piece_at(2).is_none()
+                            && self.bitboard.piece_at(3).is_none()
+                    }
+                    (Color::Black, 6) => self.bitboard.piece_at(61).is_none() && self.bitboard.piece_at(62).is_none(),
+                    (Color::Black, 2) => {
+                        self.bitboard.piece_at(57).is_none()
+                            && self.bitboard.piece_at(58).is_none()
+                            && self.bitboard.piece_at(59).is_none()
+                    }
+                    _ => false,
+                };
+
+                between_clear
             }
 
             PieceKind::Bishop => {
@@ -239,7 +301,7 @@ impl Game {
         }
     }
 
-    // Check if path between two squares is clear (for sliding pieces)
+    // Check if path between two squares is clear
     fn is_path_clear(&self, from: u8, to: u8, occupancy: u64) -> bool {
         let from_file = from % 8;
         let from_rank = from / 8;
@@ -312,7 +374,7 @@ impl Game {
         false
     }
 
-    // Internal: check if move is legal (doesn't modify board)
+    // Internal: check if move is legal
     fn is_move_legal_internal(&self, from: u8, to: u8, piece: Piece, promotion: Option<PieceKind>) -> bool {
         // Check destination
         if let Some(captured) = self.bitboard.piece_at(to) {
@@ -320,17 +382,34 @@ impl Game {
                 return false;
             }
         }
-        
+
         // Check pseudo-legality
         if !self.is_move_pseudo_legal(from, to, piece) {
             return false;
         }
-        
+
+        if is_castling_move(from, to, piece) {
+            if self.is_in_check(piece.color) {
+                return false;
+            }
+            let Some(mid) = castling_mid_square(from, to) else {
+                return false;
+            };
+            let mut mid_pos = self.clone();
+            if !mid_pos.apply_move_unchecked(from, mid, None) {
+                return false;
+            }
+            if mid_pos.is_in_check(piece.color) {
+                return false;
+            }
+        }
+
         // Check king safety
         let mut temp = self.clone();
         if !temp.apply_move_unchecked(from, to, promotion) {
             return false;
         }
+
         !temp.is_in_check(self.side_to_move)
     }
 
@@ -426,4 +505,39 @@ fn move_to_uci(from: u8, to: u8, promotion: Option<PieceKind>) -> String {
     }
 
     s
+}
+
+fn is_castling_move(from: u8, to: u8, piece: Piece) -> bool {
+    if piece.kind != PieceKind::King {
+        return false;
+    }
+
+    matches!(
+        (piece.color, from, to),
+        (Color::White, 4, 6) | (Color::White, 4, 2) | (Color::Black, 60, 62) | (Color::Black, 60, 58)
+    )
+}
+
+fn castling_mid_square(from: u8, to: u8) -> Option<u8> {
+    match (from, to) {
+        (4, 6) => Some(5),
+        (4, 2) => Some(3),
+        (60, 62) => Some(61),
+        (60, 58) => Some(59),
+        _ => None,
+    }
+}
+
+fn castle_rook_move(from: u8, to: u8, piece: Piece) -> Option<(u8, u8)> {
+    if !is_castling_move(from, to, piece) {
+        return None;
+    }
+
+    match (piece.color, to) {
+        (Color::White, 6) => Some((7, 5)),
+        (Color::White, 2) => Some((0, 3)),
+        (Color::Black, 62) => Some((63, 61)),
+        (Color::Black, 58) => Some((56, 59)),
+        _ => None,
+    }
 }
